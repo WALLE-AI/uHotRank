@@ -8,10 +8,14 @@ import json
 import os
 from playwright.sync_api import sync_playwright
 
+from backend.utils.url_to_markdown import Crawler, ReadabilityExtractor
+
 # --- 配置区域 ---
 OUTPUT_FILE = "tophub_articles.jsonl"  # 结果保存文件 (json lines 格式)
 MIN_SLEEP = 3  # 最短等待时间 (秒)
 MAX_SLEEP = 8  # 最长等待时间 (秒)
+
+crawler = Crawler()
 
 def get_random_headers():
     """
@@ -67,10 +71,11 @@ def scrape_tophub_dynamic_link():
         
         results = []
         
-        for node in nodes[-2:]:
+        for node in nodes:
             # 获取榜单标题
             category_el = node.query_selector("div.cc-cd-lb")
             category = category_el.inner_text().strip() if category_el else "Unknown"
+            print(f"发现榜单分类: {category}")
             
             # 获取榜单内的链接
             links = node.query_selector_all("a")
@@ -80,8 +85,9 @@ def scrape_tophub_dynamic_link():
                 if title_el:
                     title = title_el.inner_text().strip()
                     url = link.get_attribute("href")
-                    results.append(
-                        {"category": category, "title": title, "tophub_url": url}
+                    if category == "开源中国":
+                        results.append(
+                            {"category": category, "title": title, "tophub_url": url}
                         )
 
         browser.close()
@@ -130,18 +136,55 @@ def get_homepage_links():
     except Exception as e:
         print(f"❌ 获取首页失败: {e}")
         return []
+    
+    
+def get_html_stealth(url):
+    """
+    使用 curl_cffi 模拟真实 Chrome 浏览器的指纹
+    能够通过 99% 的 WAF 拦截 (包括 FreeBuf, Cloudflare)
+    """
+    from curl_cffi import requests as cffi_requests
+    try:
+        # impersonate="chrome110" 是核心：它让 TLS 握手看起来像 Chrome 110 版本
+        response = cffi_requests.get(
+            url, 
+            impersonate="chrome110", 
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                "Referer": "https://tophub.today/"
+            },
+            timeout=15
+        )
+        return response.text
+    except Exception as e:
+        print(f"   [下载失败] {e}")
+        return None
 
 def gentle_scrape_content(article_info):
     """
     对单篇文章进行温和爬取
     """
     url = article_info['tophub_url']
+    # 1. 使用抗拦截方式下载 HTML
+    html = get_html_stealth(url)
+    
+    if not html:
+        return {"title": article_info['title'], "status": "failed_download"}
+    
+
+    # test_url = "https://finance.sina.com.cn/stock/relnews/us/2024-08-15/doc-incitsya6536375.shtml"
+    # # test_weixinarticl = "https://pypi.org/project/readability/"
+    # result = crawler.crawl(url)
+    # markdown = result.to_markdown()
+    extractor = ReadabilityExtractor()
+    extract_content = extractor.extract_article(html)
+    extract_content.url = url
+    print("markdown:", extract_content.to_markdown())
     
     try:
         # newspaper3k 配置
         # browser_user_agent 属性非常重要，newspaper 默认 UA 很容易被封
-        article = Article(url, language='zh', browser_user_agent=get_random_headers()['User-Agent'])
-        
+        article = Article(url, language='zh')
         article.download()
         article.parse()
         
@@ -151,7 +194,7 @@ def gentle_scrape_content(article_info):
             "category": article_info['category'],
             "original_url": article.url, # 跳转后的真实地址
             "publish_date": str(article.publish_date) if article.publish_date else None,
-            "content": article.text,
+            "content": extract_content.to_markdown(),
             "images": list(article.images), # 获取图片列表
             "scraped_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
