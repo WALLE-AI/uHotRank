@@ -1,39 +1,36 @@
-# --- 主程序 ---
-import os
-import random
-import time
-from backend.agent.agent_today_data import MAX_SLEEP, MIN_SLEEP, OUTPUT_FILE, gentle_scrape_content, get_homepage_links, save_to_file, scrape_tophub_dynamic_link
+"""
+主程序 - 爬取文章并保存到 Elasticsearch
+"""
+from backend.agent.agent_today_data import scrape_all_articles_to_es
 
 
 if __name__ == "__main__":
-    # 1. 获取列表
-    articles_list = scrape_tophub_dynamic_link()
+    print("=" * 80)
+    print("TopHub 文章爬虫 - 自动保存到 Elasticsearch")
+    print("=" * 80)
+    print()
     
-    # 限制测试数量 (如果只是测试，取消下面这行的注释)
-    # articles_list = articles_list[:5] 
+    # 询问是否启用内容分析
+    enable_analysis = input("是否启用内容分析？(y/n，默认 y): ").strip().lower() != 'n'
+    print()
     
-    print(f"\n🚀 开始温和爬取任务，共 {len(articles_list)} 篇...")
-    print(f"💾 数据将实时保存至: {os.path.abspath(OUTPUT_FILE)}\n")
-
-    for i, item in enumerate(articles_list[:5]):
-        print(f"[{i+1}/{len(articles_list)}] 正在处理: {item['title'][:20]}...")
-        
-        # 2. 执行爬取
-        content_data = gentle_scrape_content(item)
-        
-        # 3. 实时保存
-        save_to_file(content_data)
-        
-        # 4. 判断结果并打印反馈
-        if "content" in content_data and len(content_data['content']) > 50:
-             print(f"   -> 成功! (正文约 {len(content_data['content'])} 字)")
-        else:
-             print(f"   -> 抓取内容较少或失败 (可能需要登录或为图片/视频内容)")
-
-        # 5. 【关键】随机温和等待
-        # 模拟人类阅读完一篇文章后，发呆几秒再点下一篇
-        sleep_time = random.uniform(MIN_SLEEP, MAX_SLEEP)
-        print(f"   -> ☕ 休息 {sleep_time:.2f} 秒...\n")
-        time.sleep(sleep_time)
-
-    print("🎉 所有任务处理完毕！")
+    # 爬取所有文章并保存到 ES
+    result = scrape_all_articles_to_es(
+        es_index_name="tophub_articles",
+        batch_size=10,  # 每 10 条批量插入一次
+        enable_analysis=enable_analysis  # 启用内容分析
+    )
+    
+    print("\n" + "=" * 80)
+    print("任务完成！")
+    print("=" * 80)
+    print(f"成功: {result['success']} 条")
+    print(f"失败: {result['failed']} 条")
+    if enable_analysis:
+        print(f"已分析: {result['analyzed']} 条")
+    print(f"总计: {result['total']} 条")
+    
+    print("\n💡 提示:")
+    print("  - 使用 search_by_analysis.py 查看分析结果和统计")
+    print("  - 使用 test_elasticsearch.py 测试搜索功能")
+    print("  - 使用 run_crawler.py 选择不同的爬取模式")
