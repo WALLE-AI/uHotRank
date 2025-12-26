@@ -26,7 +26,7 @@ export interface Article {
   title: string;
   category: string;
   published_time: string;
-  content: string;
+  content?: string; // Made optional to handle cases where content might be missing
   tech_detection?: TechDetection;
   content_analysis?: ContentAnalysis;
   created_at: string;

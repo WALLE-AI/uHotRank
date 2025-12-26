@@ -9,7 +9,7 @@ import json
 import os
 
 
-from backend.models import chat_completion, LLMProvider
+from backend.llm import chat_completion, LLMProvider
 
 logger = logging.getLogger(__name__)
 

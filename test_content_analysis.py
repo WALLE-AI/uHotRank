@@ -8,7 +8,7 @@ from backend.agent.agent_content_keyword_analysis import (
     batch_analyze_articles,
     get_article_statistics
 )
-from backend.models import LLMProvider
+from backend.llm import LLMProvider
 import os
 
 logging.basicConfig(level=logging.INFO)

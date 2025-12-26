@@ -3,7 +3,7 @@
 """
 import asyncio
 import logging
-from backend.models import (
+from backend.llm import (
     LLMProvider,
     LLMFactory,
     chat_completion,

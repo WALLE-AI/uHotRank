@@ -6,30 +6,30 @@
 
 ## Tasks
 
-- [ ] 1. 项目结构重组和基础配置
+- [x] 1. 项目结构重组和基础配置
   - 重命名 `backend/models/` 为 `backend/llm/`
   - 创建 `backend/schemas/`、`backend/api/`、`backend/service/` 目录
   - 创建配置文件 `backend/config/settings.py`
   - 在 `pyproject.toml` 中添加 FastAPI 相关依赖
   - _Requirements: 9.1, 10.1_
 
-- [ ] 2. 实现 Pydantic 数据模型
-  - [ ] 2.1 实现通用模型 (schemas/common.py)
+- [x] 2. 实现 Pydantic 数据模型
+  - [x] 2.1 实现通用模型 (schemas/common.py)
     - 实现 PaginationParams、PaginatedResponse、ErrorResponse 模型
     - _Requirements: 7.1, 7.2_
   
-  - [ ] 2.2 实现文章模型 (schemas/article.py)
+  - [x] 2.2 实现文章模型 (schemas/article.py)
     - 实现 Entity、ContentAnalysis、TechDetection 模型
     - 实现 ArticleBase、ArticleDetail、ArticleListItem 模型
     - 实现 SearchFilters、SearchRequest、SearchResponse 模型
     - _Requirements: 1.1, 2.1, 7.2, 7.4_
   
-  - [ ] 2.3 实现爬虫模型 (schemas/crawler.py)
+  - [x] 2.3 实现爬虫模型 (schemas/crawler.py)
     - 实现 StartCrawlerRequest、StartCrawlerResponse 模型
     - 实现 CrawlerStatus、CrawlerHistoryItem、CrawlerHistoryResponse 模型
     - _Requirements: 4.1, 4.3, 5.2, 7.2_
   
-  - [ ] 2.4 实现统计模型 (schemas/statistics.py)
+  - [x] 2.4 实现统计模型 (schemas/statistics.py)
     - 实现 OverallStatistics、KeywordStat、KeywordStats 模型
     - 实现 CategoryStats、SentimentStats、SourceStats 模型
     - 实现 TrendDataPoint、TrendStats 模型
@@ -40,15 +40,15 @@
   - 测试模型序列化和反序列化
   - _Requirements: 7.3_
 
-- [ ] 3. 实现服务层
-  - [ ] 3.1 实现 ArticleService (service/article_service.py)
+- [x] 3. 实现服务层
+  - [x] 3.1 实现 ArticleService (service/article_service.py)
     - 实现 get_articles 方法（分页查询）
     - 实现 get_article_by_id 方法
     - 实现 search_articles 方法（支持关键词和过滤器）
     - 实现 export_articles 方法（JSON/CSV/Excel）
     - _Requirements: 1.1, 1.2, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5_
   
-  - [ ] 3.2 实现 CrawlerService (service/crawler_service.py)
+  - [x] 3.2 实现 CrawlerService (service/crawler_service.py)
     - 实现爬虫任务状态管理（单例模式）
     - 实现 start_crawler 方法（异步任务启动）
     - 实现 get_status 方法
@@ -56,7 +56,7 @@
     - 实现 get_history 方法（内存存储历史记录）
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 3.3 实现 StatsService (service/stats_service.py)
+  - [x] 3.3 实现 StatsService (service/stats_service.py)
     - 实现 get_overall_statistics 方法
     - 实现 get_keyword_stats 方法
     - 实现 get_category_stats 方法
@@ -70,8 +70,8 @@
   - 测试业务逻辑和边界条件
   - _Requirements: 8.1, 8.2_
 
-- [ ] 4. 实现导出功能
-  - [ ] 4.1 实现导出工具 (utils/export.py)
+- [-] 4. 实现导出功能
+  - [x] 4.1 实现导出工具 (utils/export.py)
     - 实现 export_to_json 函数
     - 实现 export_to_csv 函数
     - 实现 export_to_excel 函数（使用 openpyxl）
@@ -83,8 +83,8 @@
   - 测试字段选择和过滤
   - _Requirements: 3.2, 3.4_
 
-- [ ] 5. 实现 API 路由层
-  - [ ] 5.1 实现文章路由 (api/articles.py)
+- [x] 5. 实现 API 路由层
+  - [x] 5.1 实现文章路由 (api/articles.py)
     - 实现 GET /api/articles 端点（分页列表）
     - 实现 GET /api/articles/{id} 端点（详情）
     - 实现 POST /api/articles/search 端点（搜索）
@@ -92,14 +92,14 @@
     - 添加依赖注入和参数验证
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5_
   
-  - [ ] 5.2 实现爬虫路由 (api/crawler.py)
+  - [x] 5.2 实现爬虫路由 (api/crawler.py)
     - 实现 POST /api/crawler/start 端点
     - 实现 GET /api/crawler/status 端点
     - 实现 POST /api/crawler/stop 端点
     - 实现 GET /api/crawler/history 端点
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 5.3 实现统计路由 (api/statistics.py)
+  - [x] 5.3 实现统计路由 (api/statistics.py)
     - 实现 GET /api/statistics 端点（总体统计）
     - 实现 GET /api/statistics/keywords 端点
     - 实现 GET /api/statistics/categories 端点
@@ -108,7 +108,7 @@
     - 实现 GET /api/statistics/trends 端点
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
   
-  - [ ] 5.4 实现健康检查路由 (api/health.py)
+  - [x] 5.4 实现健康检查路由 (api/health.py)
     - 实现 GET /health 端点（服务健康状态）
     - 实现 GET /version 端点（API 版本信息）
     - 检查 Elasticsearch 连接状态
@@ -120,15 +120,15 @@
   - 验证响应状态码和数据格式
   - _Requirements: 1.5, 7.3, 8.2_
 
-- [ ] 6. 实现 FastAPI 应用主入口
-  - [ ] 6.1 创建应用配置 (config/settings.py)
+- [x] 6. 实现 FastAPI 应用主入口
+  - [x] 6.1 创建应用配置 (config/settings.py)
     - 定义配置类（使用 pydantic-settings）
     - 配置 CORS 允许的源
     - 配置 Elasticsearch 连接参数
     - 配置日志级别和格式
     - _Requirements: 9.1, 9.2, 9.3, 8.3_
   
-  - [ ] 6.2 创建 FastAPI 应用 (backend/main.py)
+  - [x] 6.2 创建 FastAPI 应用 (backend/main.py)
     - 初始化 FastAPI 应用
     - 配置 CORS 中间件
     - 配置请求超时中间件

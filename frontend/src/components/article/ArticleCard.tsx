@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Article } from '@/types/article';
-import { useNavigate } from 'react-router-dom';
 
 interface ArticleCardProps {
   article: Article;
@@ -9,10 +8,18 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ article, className }: ArticleCardProps) {
-  const navigate = useNavigate();
-
   const handleClick = () => {
-    navigate(`/articles/${article.id}`);
+    // Check if URL exists and is valid
+    if (!article.url) {
+      console.error('Article URL is missing:', article);
+      return;
+    }
+    
+    // Log for debugging
+    console.log('Opening article URL:', article.url);
+    
+    // Open the original article URL directly in a new tab
+    window.open(article.url, '_blank', 'noopener,noreferrer');
   };
 
   // Format date
@@ -39,7 +46,8 @@ export function ArticleCard({ article, className }: ArticleCardProps) {
   };
 
   // Truncate content for summary
-  const truncateContent = (content: string, maxLength: number = 150) => {
+  const truncateContent = (content: string | undefined, maxLength: number = 150) => {
+    if (!content) return '';
     if (content.length <= maxLength) return content;
     return content.slice(0, maxLength) + '...';
   };
@@ -70,7 +78,7 @@ export function ArticleCard({ article, className }: ArticleCardProps) {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground line-clamp-3">
-          {truncateContent(article.content)}
+          {article.content ? truncateContent(article.content) : '暂无内容'}
         </p>
         {article.tech_detection?.categories && article.tech_detection.categories.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-3">

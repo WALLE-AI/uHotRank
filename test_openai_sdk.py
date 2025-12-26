@@ -3,7 +3,7 @@
 """
 import asyncio
 import logging
-from backend.models import LLMProvider, LLMFactory
+from backend.llm import LLMProvider, LLMFactory
 
 logging.basicConfig(level=logging.INFO)
 

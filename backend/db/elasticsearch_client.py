@@ -882,7 +882,7 @@ class ArticleRepository:
                 "aggs": {
                     "keywords": {
                         "terms": {
-                            "field": "content_analysis.keywords",
+                            "field": "content_analysis.keywords.keyword",
                             "size": top_n
                         }
                     }

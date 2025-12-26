@@ -11,7 +11,9 @@ export function ArticleDetailPage() {
 
   useEffect(() => {
     if (id) {
-      fetchArticleById(id);
+      // Decode the URL-encoded ID before fetching
+      const decodedId = decodeURIComponent(id);
+      fetchArticleById(decodedId);
     }
   }, [id, fetchArticleById]);
 

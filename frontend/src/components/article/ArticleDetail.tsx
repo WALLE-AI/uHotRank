@@ -91,7 +91,9 @@ export function ArticleDetail({ article, onBack, className }: ArticleDetailProps
         <CardContent>
           {/* Article Content */}
           <div className="prose prose-sm sm:prose dark:prose-invert max-w-none">
-            <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{article.content}</p>
+            <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
+              {article.content || '暂无内容'}
+            </p>
           </div>
         </CardContent>
       </Card>
