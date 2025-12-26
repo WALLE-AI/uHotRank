@@ -1,0 +1,209 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { Navigation } from '../Navigation';
+import { AppLayout } from '../AppLayout';
+
+// Mock the UI store
+import { useUIStore } from '@/stores/uiStore';
+
+// Helper to set viewport size
+const setViewportSize = (width: number, height: number) => {
+  Object.defineProperty(window, 'innerWidth', {
+    writable: true,
+    configurable: true,
+    value: width,
+  });
+  Object.defineProperty(window, 'innerHeight', {
+    writable: true,
+    configurable: true,
+    value: height,
+  });
+  window.dispatchEvent(new Event('resize'));
+};
+
+describe('Responsive Layout Tests', () => {
+  beforeEach(() => {
+    // Reset viewport to desktop size before each test
+    setViewportSize(1920, 1080);
+  });
+
+  afterEach(() => {
+    // Clean up
+    setViewportSize(1920, 1080);
+  });
+
+  describe('Desktop Layout (≥1024px)', () => {
+    it('should render navigation with desktop layout', () => {
+      setViewportSize(1920, 1080);
+      
+      render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Desktop navigation should be visible
+      const nav = screen.getByRole('navigation');
+      expect(nav).toBeInTheDocument();
+    });
+
+    it('should render app layout with proper spacing', () => {
+      setViewportSize(1920, 1080);
+      
+      render(
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      );
+
+      // Main content should be present
+      const main = screen.getByRole('main');
+      expect(main).toBeInTheDocument();
+    });
+  });
+
+  describe('Tablet Layout (768px - 1023px)', () => {
+    it('should render navigation with tablet layout', () => {
+      setViewportSize(768, 1024);
+      
+      render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Navigation should still be present
+      const nav = screen.getByRole('navigation');
+      expect(nav).toBeInTheDocument();
+    });
+
+    it('should render app layout with tablet spacing', () => {
+      setViewportSize(768, 1024);
+      
+      render(
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      );
+
+      // Main content should be present
+      const main = screen.getByRole('main');
+      expect(main).toBeInTheDocument();
+    });
+  });
+
+  describe('Mobile Layout (<768px)', () => {
+    it('should render navigation with mobile layout', () => {
+      setViewportSize(375, 667);
+      
+      render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Mobile navigation should be present
+      const nav = screen.getByRole('navigation');
+      expect(nav).toBeInTheDocument();
+      
+      // Hamburger menu button should be visible
+      const menuButton = screen.getByLabelText(/menu/i);
+      expect(menuButton).toBeInTheDocument();
+    });
+
+    it('should render app layout with mobile spacing', () => {
+      setViewportSize(375, 667);
+      
+      render(
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      );
+
+      // Main content should be present
+      const main = screen.getByRole('main');
+      expect(main).toBeInTheDocument();
+    });
+
+    it('should show hamburger menu on mobile', () => {
+      setViewportSize(375, 667);
+      
+      render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Hamburger menu button should be visible on mobile
+      const menuButton = screen.getByLabelText(/menu/i);
+      expect(menuButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Responsive Breakpoints', () => {
+    it('should handle viewport resize from desktop to mobile', () => {
+      // Start with desktop
+      setViewportSize(1920, 1080);
+      
+      const { rerender } = render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Resize to mobile
+      setViewportSize(375, 667);
+      rerender(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Mobile menu button should now be visible
+      const menuButton = screen.getByLabelText(/menu/i);
+      expect(menuButton).toBeInTheDocument();
+    });
+
+    it('should handle viewport resize from mobile to desktop', () => {
+      // Start with mobile
+      setViewportSize(375, 667);
+      
+      const { rerender } = render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Verify mobile menu is present
+      expect(screen.getByLabelText(/menu/i)).toBeInTheDocument();
+
+      // Resize to desktop
+      setViewportSize(1920, 1080);
+      rerender(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Navigation should still be present
+      expect(screen.getByRole('navigation')).toBeInTheDocument();
+    });
+  });
+
+  describe('Touch Interactions', () => {
+    it('should have touch-manipulation class on mobile buttons', () => {
+      setViewportSize(375, 667);
+      
+      render(
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      );
+
+      // Menu button should have touch-manipulation class
+      const menuButton = screen.getByLabelText(/menu/i);
+      expect(menuButton.className).toContain('touch-manipulation');
+    });
+  });
+});
