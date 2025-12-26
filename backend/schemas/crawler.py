@@ -19,17 +19,24 @@ class StartCrawlerResponse(BaseModel):
     message: str = Field("Crawler task started successfully", description="响应消息")
 
 
+class CrawlerProgress(BaseModel):
+    """爬虫进度模型"""
+    total: int = Field(0, description="总数")
+    crawled: int = Field(0, description="已爬取数")
+    success: int = Field(0, description="成功数")
+    failed: int = Field(0, description="失败数")
+
+
 class CrawlerStatus(BaseModel):
     """爬虫状态模型"""
     is_running: bool = Field(..., description="是否正在运行")
     task_id: Optional[str] = Field(None, description="任务ID")
     mode: Optional[str] = Field(None, description="爬虫模式")
-    progress: Optional[int] = Field(None, description="进度百分比")
-    total_crawled: int = Field(0, description="已爬取总数")
-    success_count: int = Field(0, description="成功数量")
-    failed_count: int = Field(0, description="失败数量")
+    status: str = Field("idle", description="当前状态：idle, running, completed, error")
+    progress: CrawlerProgress = Field(default_factory=CrawlerProgress, description="进度信息")
     started_at: Optional[str] = Field(None, description="开始时间")
-    current_status: str = Field("idle", description="当前状态")
+    completed_at: Optional[str] = Field(None, description="完成时间")
+    error_message: Optional[str] = Field(None, description="错误信息")
 
 
 class CrawlerHistoryItem(BaseModel):

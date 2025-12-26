@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     ]
     
     # Elasticsearch Configuration
-    ELASTICSEARCH_HOST: str = "localhost"
-    ELASTICSEARCH_PORT: int = 9200
+    ELASTICSEARCH_HOST: str = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
+    ELASTICSEARCH_PORT: str = os.getenv("ELASTICSEARCH_PORT")
     ELASTICSEARCH_INDEX: str = "tophub_articles"
     ELASTICSEARCH_USER: str = ""
     ELASTICSEARCH_PASSWORD: str = ""

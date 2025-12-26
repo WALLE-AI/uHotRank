@@ -13,7 +13,7 @@ interface CrawlerProgressProps {
 export function CrawlerProgress({ task, onUpdate }: CrawlerProgressProps) {
   // Poll for updates when task is running
   useEffect(() => {
-    if (!task || task.status !== 'running') {
+    if (!task || !task.is_running) {
       return;
     }
 
@@ -29,7 +29,7 @@ export function CrawlerProgress({ task, onUpdate }: CrawlerProgressProps) {
     return () => {
       clearInterval(interval);
     };
-  }, [task?.status, task?.id, onUpdate]);
+  }, [task?.is_running, task?.task_id, onUpdate]);
 
   if (!task) {
     return (

@@ -491,7 +491,7 @@ def scrape_and_filter_tech_articles(
     detailed_articles = []
     duplicate_count = 0
     
-    for i, article_info in enumerate(articles, 1):
+    for i, article_info in enumerate(articles[:10], 1):
         print(f"[{i}/{len(articles)}] 正在爬取: {article_info['title']}")
         
         article_content = gentle_scrape_content(article_info)
@@ -585,13 +585,17 @@ def scrape_and_filter_tech_articles(
 
 def scrape_all_articles_to_es(
     es_index_name: str = "tophub_articles",
-    batch_size: int = 10,
+    batch_size: int = 1,
     check_duplicate: bool = True,
     skip_duplicate: bool = True,
-    enable_analysis: bool = True
+    enable_analysis: bool = True,
+    progress_callback=None
 ):
     """
     爬取所有文章并直接保存到 Elasticsearch（批量模式）
+    
+    Args:
+        progress_callback: 进度回调函数，接受 (total, success, failed, current_title) 参数
     """
     print("=" * 60)
     print("开始爬取文章并保存到 Elasticsearch")
@@ -640,6 +644,15 @@ def scrape_all_articles_to_es(
     
     for i, article_info in enumerate(articles[:5], 1):
         print(f"[{i}/{len(articles)}] 正在爬取: {article_info['title']}")
+        
+        # 调用进度回调
+        if progress_callback:
+            progress_callback(
+                total=success_count + failed_count + duplicate_count,
+                success=success_count,
+                failed=failed_count,
+                current=article_info['title']
+            )
         
         article_content = gentle_scrape_content(article_info)
         

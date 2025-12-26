@@ -35,9 +35,10 @@ export interface Statistics {
 }
 
 export interface CrawlerTask {
-  id: string;
-  mode: 'all' | 'tech_only' | 'with_analysis';
+  task_id: string | null;  // 后端返回 task_id
+  mode: 'all' | 'tech_only' | 'with_analysis' | null;
   status: 'idle' | 'running' | 'completed' | 'error';
+  is_running: boolean;  // 后端返回 is_running
   progress: {
     total: number;
     crawled: number;

@@ -22,6 +22,14 @@ class CrawlerService:
 
     _instance = None
     _lock = asyncio.Lock()
+    
+    # 共享的进度跟踪器（可以被爬虫函数访问）
+    progress_tracker: Dict[str, Any] = {
+        "total_crawled": 0,
+        "success_count": 0,
+        "failed_count": 0,
+        "current_article": "",
+    }
 
     def __new__(cls):
         """单例模式实现"""
@@ -102,24 +110,54 @@ class CrawlerService:
             batch_size: 批量大小
         """
         try:
+            # 重置进度跟踪器
+            self.progress_tracker = {
+                "total_crawled": 0,
+                "success_count": 0,
+                "failed_count": 0,
+                "current_article": "",
+            }
+            
             # 导入爬虫函数
             from backend.agent.agent_today_data import scrape_all_articles_to_es
 
             # 根据模式设置参数
-            enable_analysis = mode == "with_analysis"
+            enable_analysis=True
+            
+            # 创建一个任务来定期更新状态
+            async def update_progress():
+                while self.task_status["is_running"]:
+                    # 从进度跟踪器更新状态
+                    self.task_status["total_crawled"] = self.progress_tracker["total_crawled"]
+                    self.task_status["success_count"] = self.progress_tracker["success_count"]
+                    self.task_status["failed_count"] = self.progress_tracker["failed_count"]
+                    await asyncio.sleep(0.5)  # 每0.5秒更新一次
+            
+            # 启动进度更新任务
+            progress_task = asyncio.create_task(update_progress())
             
             # 运行爬虫（在线程池中执行，避免阻塞事件循环）
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None,
-                lambda: scrape_all_articles_to_es(
+            
+            # 创建一个包装函数来传递参数
+            def run_crawler():
+                return scrape_all_articles_to_es(
                     es_index_name="tophub_articles",
                     batch_size=batch_size,
                     check_duplicate=True,
                     skip_duplicate=True,
                     enable_analysis=enable_analysis,
-                ),
-            )
+                    progress_callback=self._update_progress_callback,
+                )
+            
+            result = await loop.run_in_executor(None, run_crawler)
+            
+            # 停止进度更新任务
+            progress_task.cancel()
+            try:
+                await progress_task
+            except asyncio.CancelledError:
+                pass
 
             # 更新状态
             self.task_status["is_running"] = False
@@ -127,6 +165,7 @@ class CrawlerService:
             self.task_status["total_crawled"] = result.get("total", 0)
             self.task_status["success_count"] = result.get("success", 0)
             self.task_status["failed_count"] = result.get("failed", 0)
+            self.task_status["completed_at"] = datetime.now().isoformat()
 
             # 添加到历史记录
             history_item = {
@@ -147,6 +186,7 @@ class CrawlerService:
             # 任务被取消
             self.task_status["is_running"] = False
             self.task_status["current_status"] = "stopped"
+            self.task_status["completed_at"] = datetime.now().isoformat()
 
             # 添加到历史记录
             history_item = {
@@ -166,7 +206,9 @@ class CrawlerService:
         except Exception as e:
             # 任务失败
             self.task_status["is_running"] = False
-            self.task_status["current_status"] = "failed"
+            self.task_status["current_status"] = "error"
+            self.task_status["error_message"] = str(e)
+            self.task_status["completed_at"] = datetime.now().isoformat()
 
             # 添加到历史记录
             history_item = {
@@ -183,6 +225,25 @@ class CrawlerService:
             self.task_history.insert(0, history_item)
 
             logger.error(f"爬虫任务失败: {self.task_id}, 错误: {e}")
+    
+    def _update_progress_callback(self, total: int, success: int, failed: int, current: str = ""):
+        """
+        进度回调函数（由爬虫函数调用）
+        
+        Args:
+            total: 总爬取数
+            success: 成功数
+            failed: 失败数
+            current: 当前文章标题
+        """
+        self.progress_tracker["total_crawled"] = total
+        self.progress_tracker["success_count"] = success
+        self.progress_tracker["failed_count"] = failed
+        self.progress_tracker["current_article"] = current
+        logger.debug(
+            "Progress update: total=%d, success=%d, failed=%d, current=%s",
+            total, success, failed, current[:30] if current else ""
+        )
 
     async def get_status(self) -> CrawlerStatus:
         """
@@ -191,16 +252,22 @@ class CrawlerService:
         Returns:
             CrawlerStatus: 爬虫状态
         """
+        from backend.schemas.crawler import CrawlerProgress
+        
         return CrawlerStatus(
             is_running=self.task_status["is_running"],
             task_id=self.task_id if self.task_status["is_running"] else None,
             mode=self.task_status["mode"],
-            progress=self.task_status["progress"],
-            total_crawled=self.task_status["total_crawled"],
-            success_count=self.task_status["success_count"],
-            failed_count=self.task_status["failed_count"],
+            status=self.task_status["current_status"],
+            progress=CrawlerProgress(
+                total=0,  # 我们不知道总数，设为0
+                crawled=self.task_status["total_crawled"],
+                success=self.task_status["success_count"],
+                failed=self.task_status["failed_count"],
+            ),
             started_at=self.task_status["started_at"],
-            current_status=self.task_status["current_status"],
+            completed_at=self.task_status.get("completed_at"),
+            error_message=self.task_status.get("error_message"),
         )
 
     async def stop_crawler(self) -> None:
